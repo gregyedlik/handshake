@@ -2,6 +2,9 @@ import can
 import pandas
 import time
 import binascii
+import threading
+
+handshake = {0x72, 0x73, 0x80, 0x81}
 
 
 def make_nice_hex_string(raw):
@@ -10,12 +13,21 @@ def make_nice_hex_string(raw):
     return string
 
 
+def receive(cap):
+    bus.send(wakeup)
+    for msg in bus:
+        if msg.arbitration_id in handshake:
+            cap.append(msg)
+            time.sleep(0.01)
+            if msg.arbitration_id == 0x81:
+                break
+
+
 bus = can.Bus(channel=0,
               interface='kvaser', # noqa
               receive_own_messages=True, # noqa
               bitrate=500000) # noqa
 
-handshake = {0x72, 0x73, 0x80, 0x81}
 
 wakeup = can.Message()
 
@@ -24,22 +36,19 @@ switchoff = can.Message(arbitration_id=0x61,
                         data=[0x00])
 
 while 1:
-    bus.send(wakeup)
-
     captured = []
-    for msg in bus:
-        if msg.arbitration_id in handshake:
-            captured.append(msg)
-            if msg.arbitration_id == 0x81:
-                bus.send(switchoff)
-                break
+    p = threading.Thread(target=receive, args=[captured])
+    p.start()
+    p.join(timeout=5)
+    bus.send(switchoff)
 
     captured_important = [[hex(msg.arbitration_id),
-                           make_nice_hex_string(msg.data)]
+                           make_nice_hex_string(msg.data),
+                           time.strftime("%d %b %H:%M:%S")]
                           for msg in captured]
-    df = pandas.DataFrame(data=captured_important, columns=['arbitration ID', 'data'])
-    df.to_csv('list.csv', index=False, mode='a', header=False)
+    df = pandas.DataFrame(data=captured_important, columns=['arbitration ID', 'data', 'time'])
+    df.to_csv('list3.csv', index=False, mode='a', header=False)
 
-    print('Success')
+    print(df)
 
     time.sleep(5)
