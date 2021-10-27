@@ -42,13 +42,22 @@ while 1:
     p.join(timeout=5)
     bus.send(switchoff)
 
-    captured_important = [[hex(msg.arbitration_id),
-                           make_nice_hex_string(msg.data),
-                           time.strftime("%d %b %H:%M:%S")]
-                          for msg in captured]
-    df = pandas.DataFrame(data=captured_important, columns=['arbitration ID', 'data', 'time'])
-    df.to_csv('list3.csv', index=False, mode='a', header=False)
-
-    print(df)
-
-    time.sleep(5)
+    if len(captured) == 4:
+        captured_important = [[hex(msg.arbitration_id),
+                               make_nice_hex_string(msg.data),
+                               time.strftime("%d %b %H:%M:%S")]
+                              for msg in captured]
+        df = pandas.DataFrame(data=captured_important, columns=['arbitration ID', 'data', 'time'])
+        df.to_csv('list4.csv', index=False, mode='a', header=False)
+        print(df)
+        time.sleep(6)
+    else:
+        print("Incomplete sequence. Reinitialize...")
+        time.sleep(10)
+        print("Turn on...")
+        bus.send(wakeup)
+        time.sleep(20)
+        print("Turn off...")
+        bus.send(switchoff)
+        time.sleep(10)
+        print("Back to normal.")
