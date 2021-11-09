@@ -19,7 +19,7 @@ def receive(cap):
         if msg.arbitration_id in handshake:
             cap.append(msg)
             time.sleep(0.01)
-            if msg.arbitration_id == 0x81:
+            if len(cap) == 4:
                 break
 
 
@@ -42,21 +42,22 @@ while 1:
     p.join(timeout=5)
     bus.send(switchoff)
 
+    captured_important = [[hex(msg.arbitration_id),
+                           make_nice_hex_string(msg.data),
+                           time.strftime("%d %b %H:%M:%S")]
+                          for msg in captured]
+    df = pandas.DataFrame(data=captured_important, columns=['arbitration ID', 'data', 'time'])
+    print(df)
+
     if len(captured) == 4:
-        captured_important = [[hex(msg.arbitration_id),
-                               make_nice_hex_string(msg.data),
-                               time.strftime("%d %b %H:%M:%S")]
-                              for msg in captured]
-        df = pandas.DataFrame(data=captured_important, columns=['arbitration ID', 'data', 'time'])
         df.to_csv('list_scott.csv', index=False, mode='a', header=False)
-        print(df)
-        time.sleep(6)
+        time.sleep(7)
     else:
         print("Incomplete sequence. Reinitialize...")
         time.sleep(10)
         print("Turn on...")
         bus.send(wakeup)
-        time.sleep(20)
+        time.sleep(10)
         print("Turn off...")
         bus.send(switchoff)
         time.sleep(10)
