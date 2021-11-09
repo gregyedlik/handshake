@@ -1,7 +1,7 @@
 import pandas
 import matplotlib.pyplot as plt
 
-df = pandas.read_csv('list4.csv', header=None)
+df = pandas.read_csv('list_scott.csv', header=None)
 df.columns = ['ID', 'data', 'timestamp']
 df['Int'] = [int(proba.replace(' ', ''), 16) for proba in df.data]
 

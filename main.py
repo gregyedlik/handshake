@@ -48,7 +48,7 @@ while 1:
                                time.strftime("%d %b %H:%M:%S")]
                               for msg in captured]
         df = pandas.DataFrame(data=captured_important, columns=['arbitration ID', 'data', 'time'])
-        df.to_csv('list4.csv', index=False, mode='a', header=False)
+        df.to_csv('list_scott.csv', index=False, mode='a', header=False)
         print(df)
         time.sleep(6)
     else:
