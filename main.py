@@ -13,7 +13,7 @@ def make_nice_hex_string(raw):
     return string
 
 
-def receive(cap):
+def receive(cap, SOC):
     bus.send(wakeup)
     for msg in bus:
         if msg.arbitration_id in handshake:
@@ -21,6 +21,12 @@ def receive(cap):
             time.sleep(0.01)
             if len(cap) == 4:
                 break
+        elif msg.arbitration_id == 0x111:
+            string = make_nice_hex_string(msg.data)
+            relevant = string[-2:]
+            SOC_temp = int(relevant, 16)
+            if SOC_temp > 0:
+                SOC[0] = SOC_temp
 
 
 bus = can.Bus(channel=0,
@@ -37,7 +43,8 @@ switchoff = can.Message(arbitration_id=0x61,
 
 while 1:
     captured = []
-    p = threading.Thread(target=receive, args=[captured])
+    SOC = [101]
+    p = threading.Thread(target=receive, args=[captured, SOC])
     p.start()
     p.join(timeout=5)
     bus.send(switchoff)
@@ -48,6 +55,13 @@ while 1:
                           for msg in captured]
     df = pandas.DataFrame(data=captured_important, columns=['arbitration ID', 'data', 'time'])
     print(df)
+
+    if len(SOC) > 0:
+        print('SOC: ' + str(SOC[0]) + '%')
+
+        if SOC[0] < 5:
+            print('Too low SOC, stopping recording.')
+            break
 
     if len(captured) == 4:
         df.to_csv('list_scott.csv', index=False, mode='a', header=False)
