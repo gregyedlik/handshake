@@ -29,26 +29,47 @@ print(str(len(intersection)) + " 0x72s have appeared identical in both datasets.
 # Now the question is - do the handshakes completely match, or only the 0x72s?
 # I could go through the intersection, and select each handshake from both datasets and compare them.
 
-df = getdata('list_scott.csv')
-#df = df[:20000]
-timestamps = set(df.timestamp)
-handshakes = [df[df.timestamp == ts] for ts in timestamps]
-handshakes_intersecting = []
-for hs in handshakes:
-    hs72 = hs[hs.ID == '0x72']
-    if hs72.Int.values[0] in intersection:
-        handshakes_intersecting.append(hs)
 
-handshakesdict = {
-    df.timestamp.values[0]:
-        {
-            0x72: df[df.ID == '0x72'].Int.values[0],
-            0x73: df[df.ID == '0x73'].Int.values[0],
-            0x80: df[df.ID == '0x80'].Int.values[0],
-            0x81: df[df.ID == '0x81'].Int.values[0]
-        }
-    for df in handshakes_intersecting
-}
+def getIntersectingHandshakes(filename, intsection):
+    df = getdata(filename)
+    df = df[:40000]
+    timestamps = set(df.timestamp)
+    handshakes = [df[df.timestamp == ts] for ts in timestamps]
+    handshakes_intersecting = []
+    for hs in handshakes:
+        hs72 = hs[hs.ID == '0x72']
+        if hs72.Int.values[0] in intsection:
+            handshakes_intersecting.append(hs)
 
-handshakes_scott = pandas.DataFrame(handshakesdict)
-scott = handshakes_scott.transpose()
+    handshakesdict = {
+        df.timestamp.values[0]:
+            {
+                0x72: df[df.ID == '0x72'].Int.values[0],
+                0x73: df[df.ID == '0x73'].Int.values[0],
+                0x80: df[df.ID == '0x80'].Int.values[0],
+                0x81: df[df.ID == '0x81'].Int.values[0]
+            }
+        for df in handshakes_intersecting
+    }
+
+    handshakes_df = pandas.DataFrame(handshakesdict)
+    return handshakes_df.transpose()
+
+scott = getIntersectingHandshakes('list_scott.csv', intersection)
+badconnector = getIntersectingHandshakes('list_badconnector.csv', intersection)
+
+scottset72 = set(scott[0x72])
+badconnectorset72 = set(badconnector[0x72])
+intersectionset72 = scottset72.intersection(badconnectorset72)
+
+for x in intersectionset72:
+    s = scott[scott[0x72] == x]
+    b = badconnector[badconnector[0x72] == x]
+    print('Scott battery:')
+    print(s)
+    print()
+    print('Bad connector battery:')
+    print(b)
+    print('---')
+    print()
+    print()
