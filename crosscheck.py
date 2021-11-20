@@ -32,14 +32,15 @@ print(str(len(intersection)) + " 0x72s have appeared identical in both datasets.
 
 def getIntersectingHandshakes(filename, intsection):
     df = getdata(filename)
-    df = df[:40000]
+    # df = df[:40000]
     timestamps = set(df.timestamp)
     handshakes = [df[df.timestamp == ts] for ts in timestamps]
     handshakes_intersecting = []
     for hs in handshakes:
-        hs72 = hs[hs.ID == '0x72']
-        if hs72.Int.values[0] in intsection:
-            handshakes_intersecting.append(hs)
+        if len(hs) >= 4:
+            hs72 = hs[hs.ID == '0x72']
+            if hs72.Int.values[0] in intsection:
+                handshakes_intersecting.append(hs)
 
     handshakesdict = {
         df.timestamp.values[0]:
@@ -62,14 +63,13 @@ scottset72 = set(scott[0x72])
 badconnectorset72 = set(badconnector[0x72])
 intersectionset72 = scottset72.intersection(badconnectorset72)
 
-for x in intersectionset72:
-    s = scott[scott[0x72] == x]
-    b = badconnector[badconnector[0x72] == x]
-    print('Scott battery:')
-    print(s)
-    print()
-    print('Bad connector battery:')
-    print(b)
-    print('---')
-    print()
-    print()
+with open('crosscheck.txt', 'a') as f:
+    for x in intersectionset72:
+        s = scott[scott[0x72] == x]
+        b = badconnector[badconnector[0x72] == x]
+        f.write('Scott battery:\n')
+        f.write(str(s))
+        f.write('\nBad connector battery:\n')
+        f.write(str(b))
+        f.write('\n ----- \n \n')
+
