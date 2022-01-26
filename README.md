@@ -9,7 +9,7 @@ I verified that:
     * The challenges are the same towards both batteries
     * The answers are different between the two batteries
     * But a given battery will always give the same answers to the same challenge
-* It is not clear why does both the challenge and the answer consist of 2 bytes
+* It is not clear why does both the challenge and the answer consist of 2 CAN frames
     * The content of 0x72 seems to predict the content of 0x73
     * The content of 0x80 seems to predict the content of 0x81
 
